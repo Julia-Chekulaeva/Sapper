@@ -1,6 +1,8 @@
+package game;
+
 public class Board {
 
-    private Integer[][] openCells;
+    private Integer[][] openCells;// Это для консоли
 
     public boolean lostTheGame = false;
 
@@ -21,8 +23,9 @@ public class Board {
         for (int a = 0; a < size; a++) {
             for (int b = 0; b < size; b++) {
                 cells[a][b] = new Cell();
-                cells[a][b].setX(a);
-                cells[a][b].setY(b);
+                // ??
+                cells[a][b].setX(a);//
+                cells[a][b].setY(b);//
                 // Нужны ли эти сеттеры?
             }
         }
@@ -60,6 +63,7 @@ public class Board {
             for (int a = 0; a < size; a++) {
                 for (int b = 0; b < size; b++) {
                     openCells[a][b] = (cells[a][b].hasBomb()) ? -1 : cells[a][b].getNeighbourBombs();
+                    cells[a][b].setOpen(true);
                 }
             }
             //(нужно все ячейки сделать известными)
@@ -72,8 +76,10 @@ public class Board {
 
     private void openAllNulls(int a, int b) {
         openCells[a][b] = cells[a][b].getNeighbourBombs();
-        if (cells[a][b].isOpen() || openCells[a][b] > 0)
+        if (cells[a][b].isOpen() || openCells[a][b] > 0) {
+            cells[a][b].setOpen(true);
             return;
+        }
         cells[a][b].setOpen(true);
         for (int x = a - 1; x < a + 2; x++) {
             if (x == -1 || x == size)
@@ -97,8 +103,13 @@ public class Board {
             }
             System.out.println();
         }
+        System.out.println();
         if (numOfNulls == numOfBombs && !lostTheGame) {
             winTheGame = true;
         }
+    }
+
+    public Cell[][] getCells() {
+        return cells;
     }
 }
