@@ -1,11 +1,6 @@
 package game;
 
 public class Cell {
-    // Нужны ли в этом классе координаты?
-
-    private int x;
-
-    private int y;
 
     private boolean isOpen = false;
 
@@ -27,14 +22,6 @@ public class Cell {
 
     public int getNeighbourBombs() {
         return neighbourBombs;
-    }
-
-    public void setX(int x) {
-        this.x = x;
-    }
-
-    public void setY(int y) {
-        this.y = y;
     }
 
     public boolean isOpen() {

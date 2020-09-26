@@ -1,12 +1,6 @@
 package game;
 
-import javafx.util.Pair;
-
-import java.util.Scanner;
-
 public class Gamer {
-
-    static Scanner in = new Scanner(System.in);
 
     private final int size;
 
@@ -26,28 +20,14 @@ public class Gamer {
         board.set(size, numOfBombs);
     }
 
-    public void play() {
-        while (!(board.lostTheGame || board.winTheGame)) {
-            int x = in.nextInt() - 1;
-            int y = in.nextInt() - 1;
-            guess(x, y);
-        }
-        if (board.lostTheGame) {
-            System.out.println("Вы проиграли!");
-        } else {
-            System.out.println("Вы выиграли!");
-        }
-        System.out.println(String.format("Число попыток: %d", numOfGuesses));
-    }
-
     public void guess(int x, int y) {
         board.guess(x, y);
-        board.printAndAnalyseProcess();
+        board.analyseProcess();
         numOfGuesses++;
     }
 
-    public int getSize() {
-        return size;
+    protected void setFlag(int x, int y) {
+        board.setFlag(x, y);
     }
 
     public int getNumOfGuesses() {

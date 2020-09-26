@@ -2,17 +2,21 @@ package game;
 
 public class Board {
 
-    private Integer[][] openCells;// Это для консоли
+    public Integer[][] openCells;
 
-    public boolean lostTheGame = false;
+    private boolean lostTheGame = false;
 
-    public boolean winTheGame = false;
+    private boolean winTheGame = false;
 
     private Cell[][] cells;
 
     private int size;
 
     private int numOfBombs;
+
+    public void setFlag(int x, int y) {
+        openCells[x][y] = -1;
+    }
 
     public void set(int size, int numOfBombs) {
         this.size = size;
@@ -23,10 +27,6 @@ public class Board {
         for (int a = 0; a < size; a++) {
             for (int b = 0; b < size; b++) {
                 cells[a][b] = new Cell();
-                // ??
-                cells[a][b].setX(a);//
-                cells[a][b].setY(b);//
-                // Нужны ли эти сеттеры?
             }
         }
         //Ставим бомбы
@@ -81,29 +81,32 @@ public class Board {
             return;
         }
         cells[a][b].setOpen(true);
-        for (int x = a - 1; x < a + 2; x++) {
-            if (x == -1 || x == size)
-                continue;
-            for (int y = b - 1; y < b + 2; y++) {
-                if (y == -1 || y == size)
-                    continue;
+        for (int x = Integer.max(a - 1, 0); x < Integer.min(a + 2, size); x++) {
+            for (int y = Integer.max(b - 1, 0); y < Integer.min(b + 2, size); y++) {
                 openAllNulls(x, y);
             }
         }
     }
 
-    public void printAndAnalyseProcess() {
-        int numOfNulls = 0;
+    public void printProcess() {
         for (Integer[] cellRow : openCells) {
             for (Integer cell : cellRow) {
-                if (cell == null) {
-                    numOfNulls++;
-                }
-                System.out.print(String.format("% 4d   ", cell));
+                System.out.print(String.format("% 4d ", cell));
             }
             System.out.println();
         }
         System.out.println();
+    }
+
+    public void analyseProcess() {
+        int numOfNulls = 0;
+        for (Cell[] cellRow : cells) {
+            for (Cell cell : cellRow) {
+                if (!cell.isOpen()) {
+                    numOfNulls++;
+                }
+            }
+        }
         if (numOfNulls == numOfBombs && !lostTheGame) {
             winTheGame = true;
         }
@@ -111,5 +114,13 @@ public class Board {
 
     public Cell[][] getCells() {
         return cells;
+    }
+
+    public boolean lostTheGame() {
+        return lostTheGame;
+    }
+
+    public boolean winTheGame() {
+        return winTheGame;
     }
 }

@@ -17,15 +17,15 @@ public class Tile extends Rectangle {
 
     public static final ImagePattern BLUE_IMAGE = new ImagePattern(new Image("blue.jpg"));
 
-    private static final Image IMAGE_BOMB = new Image("bomb.png");
+    public static final Image IMAGE_BOMB = new Image("bomb.png");
 
-    private static final Image IMAGE_BOOM = new Image("bomb_boom.png");
+    public static final Image IMAGE_BOOM = new Image("bomb_boom.png");
 
     private final Paint input;
 
-    private boolean isOpen = false;
+    private boolean hasFlag = false;
 
-    private boolean hasBomb;
+    private boolean isOpen = false;
 
     public boolean isOpen() {
         return isOpen;
@@ -35,12 +35,7 @@ public class Tile extends Rectangle {
         isOpen = open;
     }
 
-    public boolean hasBomb() {
-        return hasBomb;
-    }
-
     public Tile(boolean hasBomb, int neighbours, int x, int y) {
-        this.hasBomb = hasBomb;
         this.x = x;
         this.y = y;
         input = new ImagePattern(hasBomb ? IMAGE_BOMB : getImageNumber(neighbours));
@@ -58,4 +53,16 @@ public class Tile extends Rectangle {
         setFill(new ImagePattern(IMAGE_BOOM));
     }
 
+    public boolean hasFlag() {
+        return hasFlag;
+    }
+
+    public void setFlag(boolean hasFlag) {
+        if (hasFlag) {
+            setFill(AppGUI.FLAG);
+        } else {
+            setFill(BLUE_IMAGE);
+        }
+        this.hasFlag = hasFlag;
+    }
 }
