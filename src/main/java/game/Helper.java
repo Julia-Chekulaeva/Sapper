@@ -1,6 +1,7 @@
 package game;
 
 public abstract class Helper {
+    // Просто хотелось бы понять, как работают лямбды
 
     protected abstract void someFun();
 

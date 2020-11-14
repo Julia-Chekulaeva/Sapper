@@ -1,17 +1,19 @@
 package algorithm;
 
-import game.Helper;
 import gui.AppGUI;
-import javafx.scene.layout.Pane;
 import javafx.util.Pair;
 
+import java.security.acl.Group;
 import java.util.ArrayList;
-import java.util.LinkedList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class BotGamer {
 
     List<Pair<Integer, Integer>> coordinates;
+
+    Set<GroupCells> groups;
 
     private final int size;
 
@@ -31,74 +33,94 @@ public class BotGamer {
         }
     }
 
-    private int countCells(int i, int j, boolean isNull) {
-        int res = 0;
-        for (int x = Integer.max(i - 1, 0); x < Integer.min(i + 2, size); x++) {
-            for (int y = Integer.max(j - 1, 0); y < Integer.min(j + 2, size); y++) {
-                Integer c = cells[x][y];
-                if ((isNull && c == null) || (c != null && c.equals(-1))) {
-                    res++;
+    private void makeGroups() {
+        groups = new HashSet<>();
+        Set<Pair<Integer, Integer>> guaranteedBombs = new HashSet<>();
+        for (int i = 0; i < size; i++) {
+            for (int j = 0; j < size; j++) {
+                if (cells[i][j] != null && cells[i][j] > 0) {
+                    int cell = cells[i][j];
+                    Set<Pair<Integer, Integer>> coordinates = new HashSet<>();
+                    for (int x = Integer.max(i - 1, 0); x < Integer.min(i + 2, size); x++) {
+                        for (int y = Integer.max(j - 1, 0); y < Integer.min(j + 2, size); y++) {
+                            if (cells[x][y] == null) {
+                                coordinates.add(new Pair<>(x, y));
+                                continue;
+                            }
+                            if (cells[x][y].equals(-1)) {
+                                Pair<Integer, Integer> pair = new Pair<>(x, y);
+                                coordinates.add(pair);
+                                guaranteedBombs.add(pair);
+                            }
+                        }
+                    }
+                    groups.add(new GroupCells(coordinates, cell));
+                }
+            }
+        }
+        groups.add(new GroupCells(guaranteedBombs, guaranteedBombs.size()));
+        Set<GroupCells> groupsToAdd = new HashSet<>();
+        Set<GroupCells> lastGroups = new HashSet<>();
+        GroupCells emptyGroup = new GroupCells(new HashSet<>(), 0);
+        boolean noChanges = false;
+        while (!noChanges) {
+            groups.remove(emptyGroup);
+            lastGroups.clear();
+            lastGroups.addAll(groups);
+            groups.clear();
+            for (GroupCells group : lastGroups) {
+                groups.addAll(group.split());
+            }
+            for (GroupCells group1 : groups) {
+                for (GroupCells group2 : groups) {
+                    groupsToAdd.add(group1.mergeOther(group2));
+                }
+            }
+            groups.addAll(groupsToAdd);
+            groupsToAdd.clear();
+            noChanges = true;
+            for (GroupCells group : groups) {
+                noChanges = noChanges && lastGroups.contains(group);
+            }
+        }
+    }
+
+    private boolean setGuaranteed() {
+        boolean res = false;
+        for (GroupCells group : groups) {
+            System.out.println(group.getBombsCount() + " " + group.getGroup());
+            if (group.getBombsCount() == 0 && group.getGroup().size() != 0) {
+                for (Pair<Integer, Integer> pair : group.getGroup()) {
+                    parentApp.guess(pair.getKey(), pair.getValue());
+                    if (parentApp.gameIsFinished()) {
+                        return true;
+                    }
+                }
+                res = true;
+            }
+            if (group.getBombsCount() == group.getGroup().size()) {
+                for (Pair<Integer, Integer> pair : group.getGroup()) {
+                    int x = pair.getKey(); int y = pair.getValue();
+                    if (cells[x][y] == null) {
+                        cells[x][y] = -1;
+                        parentApp.getTile(x, y).setFlag(true);
+                    }
                 }
             }
         }
         return res;
     }
 
-    public void setGuarantedBombs() {
-        for (int i = 0; i < size; i++) {
-            for (int j = 0; j < size; j++) {
-                if (cells[i][j] != null && cells[i][j] > 0) {
-                    int nullCells = countCells(i, j, true);
-                    if (nullCells == cells[i][j]) {
-                        for (int x = Integer.max(i - 1, 0); x < Integer.min(i + 2, size); x++) {
-                            for (int y = Integer.max(j - 1, 0); y < Integer.min(j + 2, size); y++) {
-                                if (cells[x][y] == null) {
-                                    cells[x][y] = -1;
-                                    parentApp.getTile(x, y).setFlag(true);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    public boolean setGuaranteedSafeCells() {
-        boolean isSomethingOpened = false;
-        for (int i = 0; i < size; i++) {
-            for (int j = 0; j < size; j++) {
-                if (cells[i][j] != null && cells[i][j] > 0) {
-                    int flagCells = countCells(i, j, false);
-                    if (flagCells == cells[i][j]) {
-                        for (int x = Integer.max(i - 1, 0); x < Integer.min(i + 2, size); x++) {
-                            for (int y = Integer.max(j - 1, 0); y < Integer.min(j + 2, size); y++) {
-                                if (cells[x][y] == null) {
-                                    parentApp.guess(x, y);
-                                    isSomethingOpened = true;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        return isSomethingOpened;
-    }
-
     public boolean play(boolean fullAutoGame) {
-        while (!parentApp.gameIsFinished()) {
-            /*try {
-                this.wait(100000000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-                System.exit(-1);
-            }*/
-            setGuarantedBombs();
+        while (parentApp.gameIsNotFinished()) {
+            makeGroups();
+            for (GroupCells group : groups) {
+                System.out.println(group.getBombsCount() + " " + group.getGroup());
+            }
             parentApp.gamer.board.printProcess();
-            if (!setGuaranteedSafeCells()) {
+            if (!setGuaranteed()) {
                 if (!fullAutoGame) {
-                    return !parentApp.gameIsFinished();
+                    return parentApp.gameIsNotFinished();
                 }
                 coordinates.removeIf(coord -> cells[coord.getKey()][coord.getValue()] != null);
                 if (coordinates.size() == 0) { // ???
