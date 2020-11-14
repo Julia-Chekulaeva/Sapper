@@ -28,11 +28,11 @@ public class AppGUI extends Application {
 
     public static final ImagePattern FLAG_NOT_SELECTED = new ImagePattern(new Image("flag_not_selected.png"));
 
-    public static final int DEFAULT_BOARD_SIZE = 5;
+    public static final int DEFAULT_BOARD_SIZE = 10;
 
     private boolean setFlag = false;
 
-    public static final int DEFAULT_NUM_OF_BOMBS = 5;
+    public static final int DEFAULT_NUM_OF_BOMBS = 15;
 
     String regex = "\\d+";
 
@@ -79,7 +79,7 @@ public class AppGUI extends Application {
         Button button = new Button("Solve by robot");
         button.relocate(MAIN_BOARD_SIZE / 2.0 - 20, MAIN_BOARD_SIZE + 10);
         RadioButton autoRobot = new RadioButton("Full automatic bot");
-        autoRobot.setSelected(false);
+        autoRobot.setSelected(true);
         autoRobot.relocate(10, boardSize * tileSize + 10);
         button.setOnMouseClicked(event -> {
             botGame = true;
@@ -148,33 +148,6 @@ public class AppGUI extends Application {
         root.setPrefSize(200, 100);
         Scene beginScene = new Scene(root);
         appStage.setScene(beginScene);
-        appStage.showAndWait();
-    }
-
-    private void askAboutRobot() {
-        RadioButton button1 = new RadioButton("You");
-        RadioButton button2 = new RadioButton("Robot");
-        button1.relocate(10, 20);
-        button1.setSelected(true);
-        button2.relocate(60, 20);
-        button1.setOnMouseClicked(e -> {
-            button2.setSelected(!button1.isSelected());
-        });
-        button2.setOnMouseClicked(e -> {
-            button1.setSelected(!button2.isSelected());
-        });
-        Label label3 = new Label("Who is playing:");
-        label3.relocate(10, 0);
-        Button button = new Button("OK");
-        button.relocate(50, 50);
-        button.setOnMouseClicked(event -> {
-            botGame = button2.isSelected();
-            appStage.close();
-        });
-        Pane root = new Pane();
-        root.setPrefSize(200, 100);
-        root.getChildren().addAll(button, button1, button2, label3);
-        appStage.setScene(new Scene(root));
         appStage.showAndWait();
     }
 

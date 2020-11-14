@@ -36,24 +36,6 @@ public class GroupCells {
             return this;
         }
         return this;
-        /*if (bombsCount == other.bombsCount)
-            return this;
-        GroupCells newGroupCells;
-        int newBombsCount;
-        if (bombsCount > other.bombsCount) {
-            newBombsCount = bombsCount - (other.group.size() - newGroup.size());
-            if (newBombsCount != other.bombsCount)
-                return this;
-
-        } else {
-            newBombsCount = other.bombsCount - (group.size() - newGroup.size());
-            if (newBombsCount != bombsCount)
-                return this;
-        }
-        newGroupCells = new GroupCells(newGroup, newBombsCount);
-        other.group.removeAll(newGroup);
-        group.removeAll(newGroup);
-        return newGroupCells;*/
     }
 
     public Set<GroupCells> split() {
