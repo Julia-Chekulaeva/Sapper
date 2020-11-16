@@ -52,6 +52,10 @@ public class AppGUI extends Application {
 
     private Cell[][] cells;
 
+    public int getNumOfBombs() {
+        return numOfBombs;
+    }
+
     private double tileSize() {
         return MAIN_BOARD_SIZE / boardSize;
     }
