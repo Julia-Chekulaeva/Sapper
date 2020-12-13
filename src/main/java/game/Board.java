@@ -14,10 +14,6 @@ public class Board {
 
     private int numOfBombs;
 
-    public void setFlag(int x, int y) {
-        openCells[x][y] = -1;
-    }
-
     public void set(int size, int numOfBombs) {
         this.size = size;
         this.numOfBombs = numOfBombs;
@@ -74,6 +70,8 @@ public class Board {
         openAllNulls(x, y);
     }
 
+    // Данная функция тестируется вместе с ф-ей guess, кроме того, она имеет модификатор private
+    // и используется только в ф-и guess
     private void openAllNulls(int a, int b) {
         openCells[a][b] = cells[a][b].getNeighbourBombs();
         if (cells[a][b].isOpen() || openCells[a][b] > 0) {
@@ -116,11 +114,33 @@ public class Board {
         return cells;
     }
 
+    // Эта функция введена для теста ф-и analyseProcess
+    public void setCellsFromIntegerCells(Integer[][] intCells, int size, int numOfBombs) {
+        this.size = size;
+        this.numOfBombs = numOfBombs;
+        openCells = new Integer[size][size];
+        cells = new Cell[size][size];
+        for (int i = 0; i < size; i++) {
+            for (int j = 0; j < size; j++) {
+                Cell cell = new Cell();
+                Integer openCell = intCells[i][j];
+                if (openCell == null) {
+                    cell.setBomb(true);
+                } else {
+                    for (int b = 0; b < openCell; b++) {
+                        cell.addNeighbourBomb();
+                    }
+                }
+                cells[i][j] = cell;
+            }
+        }
+    }
+
     public boolean lostTheGame() {
         return lostTheGame;
     }
 
-    public boolean winTheGame() {
+    public boolean wonTheGame() {
         return winTheGame;
     }
 }

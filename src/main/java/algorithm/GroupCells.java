@@ -28,7 +28,7 @@ public class GroupCells {
         if (group.equals(newGroup)) {
             other.bombsCount = other.bombsCount - bombsCount;
             other.group.removeAll(newGroup);
-            return this;
+            return other;
         }
         if (other.group.equals(newGroup)) {
             bombsCount = bombsCount - other.bombsCount;

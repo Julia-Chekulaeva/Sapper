@@ -11,6 +11,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.paint.ImagePattern;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
+import javafx.util.Pair;
 
 import java.util.regex.Pattern;
 
@@ -48,13 +49,9 @@ public class AppGUI extends Application {
 
     public Gamer gamer;
 
-    private Group tileGroup = new Group();
+    private final Group tileGroup = new Group();
 
     private Cell[][] cells;
-
-    public int getNumOfBombs() {
-        return numOfBombs;
-    }
 
     private double tileSize() {
         return MAIN_BOARD_SIZE / boardSize;
@@ -88,8 +85,13 @@ public class AppGUI extends Application {
         button.setOnMouseClicked(event -> {
             botGame = true;
             fullAutoGame = autoRobot.isSelected();
-            if (botGamer.play(fullAutoGame)) {
-                botGame = false;
+            botGamer.play(fullAutoGame);
+            botGame = false;
+            gameIsFinished = gamer.board.lostTheGame() || gamer.board.wonTheGame();
+            openCells();
+            if (gameIsFinished) {
+                Pair<Integer, Integer> coords = botGamer.getLastGuess();
+                end(getTile(coords.getKey(), coords.getValue()));
             }
         });
         root.getChildren().addAll(tileGroup, flag, button, autoRobot);
@@ -155,13 +157,31 @@ public class AppGUI extends Application {
         appStage.showAndWait();
     }
 
+    private void openCells() {
+        Integer[][] openCells = gamer.board.openCells;
+        for (int x = 0; x < boardSize; x++) {
+            for (int y = 0; y < boardSize; y++) {
+                Integer cell = openCells[x][y];
+                Tile tile = getTile(x, y);
+                if ((cell != null || gameIsFinished) && !tile.isOpen()) {
+                    if (cell != null && cell == -1 && !gameIsFinished) {
+                        tile.setFlag(true);
+                    } else {
+                        tile.setOpen(true);
+                        tile.openImage();
+                    }
+                }
+            }
+        }
+    }
+
     @Override
     public void start(Stage primaryStage) {
         primaryStage.getIcons().add(Tile.IMAGE_BOMB);
         initialise();
         primaryStage.setTitle("Sapper");
         Scene scene = new Scene(createContent());
-        botGamer = new BotGamer(this);
+        botGamer = new BotGamer(gamer);
         primaryStage.setScene(scene);
         primaryStage.show();
         scene.setOnMouseClicked(event -> {
@@ -187,10 +207,12 @@ public class AppGUI extends Application {
             if (selectedTile.hasFlag()) {
                 return;
             }
-            if (y == boardSize) {
-                return;
-            }
             guess(x, y);
+            gameIsFinished = gamer.board.lostTheGame() || gamer.board.wonTheGame();
+            openCells();
+            if (gameIsFinished) {
+                end(selectedTile);
+            }
         });
     }
 
@@ -200,7 +222,6 @@ public class AppGUI extends Application {
             return;
         }
         gamer.guess(x, y);
-        gameIsFinished = gamer.board.lostTheGame() || gamer.board.winTheGame();
         for (Node node : tileGroup.getChildren()) {
             Tile tile = (Tile) node;
             int i = tile.x;
@@ -210,25 +231,10 @@ public class AppGUI extends Application {
                 tile.openImage();
             }
         }
-        if (gameIsFinished) {
-            end(selectedTile);
-        }
     }
 
     public Tile getTile(int x, int y) {
         return (Tile) tileGroup.getChildren().get(x * boardSize + y);
-    }
-
-    public int getBoardSize() {
-        return boardSize;
-    }
-
-    public boolean gameIsNotFinished() {
-        return !gameIsFinished;
-    }
-
-    public boolean gameIsFinished() {
-        return gameIsFinished;
     }
 
     public static void main(String[] args) {

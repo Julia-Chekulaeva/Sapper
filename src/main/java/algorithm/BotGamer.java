@@ -1,11 +1,18 @@
 package algorithm;
 
 import gui.AppGUI;
+import game.Gamer;
 import javafx.util.Pair;
 
 import java.util.*;
 
 public class BotGamer {
+
+    private Pair<Integer, Integer> lastGuess;
+
+    private final int numOfBombs;
+
+    private final Gamer gamer;
 
     private final int MAX_ENDING_ATTEMPTS_COUNT = 10000;
 
@@ -17,20 +24,20 @@ public class BotGamer {
 
     private final int size;
 
-    private final AppGUI parentApp;
-
     private final Integer[][] cells;
 
     private boolean guess(int x, int y) {
-        parentApp.guess(x, y);
-        return parentApp.gameIsFinished();
+        gamer.guess(x, y);
+        lastGuess = new Pair<>(x, y);
+        return gamer.board.lostTheGame() || gamer.board.wonTheGame();
     }
 
-    public BotGamer(AppGUI parentApp) {
-        this.parentApp = parentApp;
-        size = parentApp.getBoardSize();
+    public BotGamer(Gamer gamer) {
+        this.gamer = gamer;
+        size = gamer.getSize();
+        numOfBombs = gamer.getNumOfBombs();
         coordinates = new ArrayList<>();
-        cells = parentApp.gamer.board.openCells;
+        cells = gamer.board.openCells;
         for (int i = 0; i < size; i++) {
             for (int j = 0; j < size; j++) {
                 coordinates.add(new Pair<>(i, j));
@@ -93,7 +100,6 @@ public class BotGamer {
     private boolean setGuaranteed() {
         boolean res = false;
         for (GroupCells group : groups) {
-            System.out.println(group.getBombsCount() + " " + group.getGroup());
             if (group.getBombsCount() == 0 && group.getGroup().size() != 0) {
                 for (Pair<Integer, Integer> pair : group.getGroup()) {
                     if (guess(pair.getKey(), pair.getValue())) {
@@ -108,7 +114,6 @@ public class BotGamer {
                     if (cells[x][y] == null) {
                         detectedBombs++;
                         cells[x][y] = -1;
-                        parentApp.getTile(x, y).setFlag(true);
                     }
                 }
             }
@@ -154,7 +159,13 @@ public class BotGamer {
     }
 
     private boolean enumerationOfCombs(boolean fullAutoGame) {
-        int closedBombs = parentApp.getNumOfBombs() - detectedBombs;
+        int closedBombs = numOfBombs - detectedBombs;
+        if (closedBombs == 0) {
+            for (Pair<Integer, Integer> coord : coordinates) {
+                gamer.guess(coord.getKey(), coord.getValue());
+            }
+            return true;
+        }
         int closedCells = coordinates.size();
         int min = Math.min(closedBombs, closedCells - closedBombs);
         double a = 1;
@@ -163,7 +174,6 @@ public class BotGamer {
             a *= i;
             b *= (closedCells - i + 1);
         }
-        System.out.println("");
         if (b / a > MAX_ENDING_ATTEMPTS_COUNT) {
             return false;
         }
@@ -183,7 +193,6 @@ public class BotGamer {
             if (bombsPlacing[0] == closedCells - closedBombs) {
                 break;
             }
-            System.out.println(bombsPlacing[closedBombs - 1]);
             for (int i = 0; i < closedBombs; i++) {
                 if (i != closedBombs - 1) {
                     assert (bombsPlacing[i] != closedCells - closedBombs + i);
@@ -207,7 +216,6 @@ public class BotGamer {
             if (bombInCellCases[i] == combsCount) {
                 detectedBombs++;
                 cells[x][y] = -1;
-                parentApp.getTile(x, y).setFlag(true);
             }
             if (bombInCellCases[i] == 0) {
                 res = true;
@@ -227,24 +235,18 @@ public class BotGamer {
                 if (rand <= arrayForRandomise[i]) {
                     int x = coordinates.get(i).getKey();
                     int y = coordinates.get(i).getValue();
-                    if (guess(x, y)) {
-                        return true;
-                    }
+                    guess(x, y);
+                    return true;
                 }
             }
         }
         return res;
     }
 
-    public boolean play(boolean fullAutoGame) {
-        while (parentApp.gameIsNotFinished()) {
+    public void play(boolean fullAutoGame) {
+        while (gameIsNotFinished()) {
             coordinates.removeIf(coord -> cells[coord.getKey()][coord.getValue()] != null);
-            System.out.println("Hi");
             makeGroups();
-            for (GroupCells group : groups) {
-                System.out.println(group.getBombsCount() + " " + group.getGroup());
-            }
-            parentApp.gamer.board.printProcess();
             if (!setGuaranteed()) {
                 coordinates.removeIf(coord -> cells[coord.getKey()][coord.getValue()] != null);
                 if (enumerationOfCombs(fullAutoGame)) {
@@ -252,17 +254,27 @@ public class BotGamer {
                 }
                 coordinates.removeIf(coord -> cells[coord.getKey()][coord.getValue()] != null);
                 if (!fullAutoGame) {
-                    return parentApp.gameIsNotFinished();
+                    return;
                 }
-                if (coordinates.size() == 0) { // ???
+                if (coordinates.size() == 0) {
                     continue;
                 }
                 int index = (int) (Math.random() * coordinates.size());
                 Pair<Integer, Integer> pair = coordinates.get(index);
                 guess(pair.getKey(), pair.getValue());
             }
-            parentApp.gamer.board.printProcess();
         }
-        return false;
+    }
+
+    public List<Pair<Integer, Integer>> getCoordinates() {
+        return coordinates;
+    }
+
+    public Pair<Integer, Integer> getLastGuess() {
+        return lastGuess;
+    }
+
+    public boolean gameIsNotFinished() {
+        return !(gamer.board.lostTheGame() || gamer.board.wonTheGame());
     }
 }

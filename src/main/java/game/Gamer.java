@@ -1,5 +1,7 @@
 package game;
 
+import javafx.scene.control.Label;
+
 public class Gamer {
 
     private final int size;
@@ -21,16 +23,30 @@ public class Gamer {
     }
 
     public void guess(int x, int y) {
+        System.out.println(String.format("Guess: %d %d", x, y));
         board.guess(x, y);
         board.analyseProcess();
+        board.printProcess();
         numOfGuesses++;
-    }
-
-    protected void setFlag(int x, int y) {
-        board.setFlag(x, y);
+        if (board.lostTheGame()) {
+            System.out.println("You lost the game!");
+            System.out.println();
+        }
+        if (board.wonTheGame()) {
+            System.out.println("You won the game!");
+            System.out.println();
+        }
     }
 
     public int getNumOfGuesses() {
         return numOfGuesses;
+    }
+
+    public int getNumOfBombs() {
+        return numOfBombs;
+    }
+
+    public int getSize() {
+        return size;
     }
 }
